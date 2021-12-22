@@ -2,7 +2,7 @@
     export let name;
     import { onMount } from "svelte";
     import { Button, Col, Row } from "sveltestrap";
-    let count = 1000;
+    let count = 20000;
     let diff = 0;
     let cps = 0;
 
@@ -12,22 +12,40 @@
             cost: 10,
             count: 0,
             value: 0.2,
+            rate: 1.15,
         },
         gpu: {
             name: "gpu",
             cost: 100,
             count: 0,
             value: 1,
+            rate: 1.2,
         },
         factory: {
             name: "factory",
             cost: 1000,
             count: 0,
             value: 5,
+            rate: 1.25,
+        },
+        blockchain: {
+            name: "blockchain",
+            cost: 20000,
+            count: 0,
+            value: 30,
+            rate: 1.3,
         },
     };
 
     onMount(() => {
+        let storageItems = JSON.parse(localStorage.getItem("items"));
+        if (
+            storageItems != undefined &&
+            localStorage.getItem("count") != undefined
+        ) {
+            items = storageItems;
+            count = parseInt(localStorage.getItem("count"));
+        }
         // CPS
         setInterval(() => {
             cps = (count - diff).toFixed(2);
@@ -39,6 +57,12 @@
             count = getCps();
             // console.log(cost);
         }, 1000);
+
+        // save
+        setInterval(() => {
+            localStorage.setItem("items", JSON.stringify(items));
+            localStorage.setItem("count", count);
+        }, 10000);
     });
 
     const getCps = () => {
@@ -53,7 +77,7 @@
         items[item].count++;
         count = count - items[item].cost;
         items[item].cost = Math.round(
-            items[item].cost + Math.pow(1.25, items[item].count)
+            items[item].cost + Math.pow(items[item].rate, items[item].count)
         );
         cps = getCps();
         diff = count;
