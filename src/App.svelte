@@ -114,10 +114,18 @@
         <Col md={6}>
             {#each Object.entries(items) as item}
                 <Row>
-                    <Col sm={8}
-                        >{item[1].name} = +{item[1].value} cps ({item[1].count} total
-                        = {(item[1].count * item[1].value).toFixed(2)} cps)</Col
-                    >
+                    <Col sm={8}>
+                        {item[1].name} = +{item[1].value} cps
+                        <Row>
+                            <Col>
+                                <small class="text-muted">
+                                    ({item[1].count} total = {(
+                                        item[1].count * item[1].value
+                                    ).toFixed(2)} cps)
+                                </small>
+                            </Col>
+                        </Row>
+                    </Col>
                     <Col sm={4}>
                         <Button
                             disabled={item[1].cost > count
