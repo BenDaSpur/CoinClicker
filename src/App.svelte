@@ -44,7 +44,15 @@
             itemBuff: "clicker",
             value: 0.05,
             pretty: "clicker +5%",
-            price: 30000,
+            price: 1000,
+            purchased: false,
+        },
+        {
+            name: "gpu1",
+            itemBuff: "gpu",
+            value: 1,
+            pretty: "gpu cps +1",
+            price: 5000,
             purchased: false,
         },
     ];
@@ -52,11 +60,13 @@
     onMount(() => {
         let storageItems = JSON.parse(localStorage.getItem("items"));
         if (
-            storageItems != undefined &&
-            localStorage.getItem("count") != undefined
+            storageItems != null &&
+            localStorage.getItem("count") != null
+            // && localStorage.getItem("upgrades") != null
         ) {
             items = storageItems;
             count = parseInt(localStorage.getItem("count"));
+            // unlockables = JSON.parse(localStorage.getItem("upgrades"));
         }
         // CPS
         setInterval(() => {
@@ -74,6 +84,7 @@
         setInterval(() => {
             localStorage.setItem("items", JSON.stringify(items));
             localStorage.setItem("count", count);
+            localStorage.setItem("upgrades", JSON.stringify(unlockables));
             toastMessage = "Autosave complete";
             isOpen = true;
         }, 30000);
@@ -133,10 +144,10 @@
         {toastMessage}
     </Toast>
     <Row>
-        <Col>
+        <Col md={6}>
             <h2>Total: {formatNumber(count)}</h2>
         </Col>
-        <Col>
+        <Col md={6}>
             <h2>
                 Coins per Second: {formatNumber(cps)}
             </h2>
@@ -156,16 +167,22 @@
                     <h4>Upgrades</h4>
                 </Col>
             </Row>
-            <Row>
-                {#each unlockables as purchase}
+            {#each unlockables as purchase}
+                <Row class="my-3">
                     <Col hidden={purchase.purchased ? "hidden" : undefined}>
                         <Button
+                            disabled={purchase.price > count
+                                ? "disabled"
+                                : undefined}
                             on:click={() => clickUnlockable(purchase.name)}
-                            color="success">{purchase.pretty}</Button
+                            color="success"
+                            >{purchase.pretty} - {formatNumber(
+                                purchase.price
+                            )}</Button
                         >
                     </Col>
-                {/each}
-            </Row>
+                </Row>
+            {/each}
         </Col>
         <Col md={6}>
             {#each Object.entries(items) as item}
