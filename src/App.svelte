@@ -1,11 +1,12 @@
 <script>
     export let name;
     import { onMount } from "svelte";
-    import { Button, Col, Row } from "sveltestrap";
+    import { Button, Col, Row, Toast } from "sveltestrap";
     let count = 20000;
     let diff = 0;
     let cps = 0;
-
+    let toastMessage = "";
+    let isOpen = false;
     let items = {
         clicker: {
             name: "clicker",
@@ -37,6 +38,17 @@
         },
     };
 
+    let unlockables = [
+        {
+            name: "cps1",
+            itemBuff: "clicker",
+            value: 0.05,
+            pretty: "clicker +5%",
+            price: 30000,
+            purchased: false,
+        },
+    ];
+
     onMount(() => {
         let storageItems = JSON.parse(localStorage.getItem("items"));
         if (
@@ -62,7 +74,9 @@
         setInterval(() => {
             localStorage.setItem("items", JSON.stringify(items));
             localStorage.setItem("count", count);
-        }, 10000);
+            toastMessage = "Autosave complete";
+            isOpen = true;
+        }, 30000);
     });
 
     const getCps = () => {
@@ -82,6 +96,24 @@
         );
     };
     // console.log(Object.keys(items));
+
+    const formatNumber = (number) => {
+        return number.toLocaleString();
+        // return number.toString().replace(/(.)(?=(\d{3})+$)/g, "$1,");
+    };
+
+    const clickUnlockable = (unlockable) => {
+        for (let upgrade in unlockables) {
+            if (unlockables[upgrade].name == unlockable) {
+                items[unlockables[upgrade].itemBuff].value =
+                    items[unlockables[upgrade].itemBuff].value +
+                    unlockables[upgrade].value;
+                unlockables[upgrade].purchased = true;
+                toastMessage = "Upgrade purchased";
+                isOpen = true;
+            }
+        }
+    };
 </script>
 
 <svelte:head>
@@ -97,25 +129,49 @@
 </svelte:head>
 
 <main>
+    <Toast autohide body {isOpen} on:close={() => (isOpen = false)}>
+        {toastMessage}
+    </Toast>
     <Row>
         <Col>
-            <h2>Total: {count.toFixed(2)}</h2>
+            <h2>Total: {formatNumber(count)}</h2>
         </Col>
         <Col>
             <h2>
-                Coins per Second: {cps}
+                Coins per Second: {formatNumber(cps)}
             </h2>
         </Col>
     </Row>
     <Row>
         <Col md={6}>
-            <Button color="primary" on:click={() => count++}>Get coin</Button>
+            <Row>
+                <Col>
+                    <Button color="primary" on:click={() => count++}>
+                        Get coin
+                    </Button>
+                </Col>
+            </Row>
+            <Row class="my-4">
+                <Col>
+                    <h4>Upgrades</h4>
+                </Col>
+            </Row>
+            <Row>
+                {#each unlockables as purchase}
+                    <Col hidden={purchase.purchased ? "hidden" : undefined}>
+                        <Button
+                            on:click={() => clickUnlockable(purchase.name)}
+                            color="success">{purchase.pretty}</Button
+                        >
+                    </Col>
+                {/each}
+            </Row>
         </Col>
         <Col md={6}>
             {#each Object.entries(items) as item}
                 <Row>
                     <Col sm={8}>
-                        {item[1].name} = +{item[1].value} cps
+                        {item[1].name} = +{item[1].value.toFixed(2)} cps
                         <Row>
                             <Col>
                                 <small class="text-muted">
@@ -132,7 +188,7 @@
                                 ? "disabled"
                                 : undefined}
                             on:click={() => clickedItem(item[1].name)}
-                            color="primary">{item[1].cost}</Button
+                            color="primary">{formatNumber(item[1].cost)}</Button
                         >
                     </Col>
                 </Row>
