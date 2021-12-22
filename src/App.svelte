@@ -2,67 +2,63 @@
     export let name;
     import { onMount } from "svelte";
     import { Button, Col, Row } from "sveltestrap";
-    let count = 0;
+    let count = 1000;
     let diff = 0;
     let cps = 0;
-    let clicker = 0;
-    let gpu = 0;
-    let factory = 0;
-    let cost = {
-        clicker: 10,
-        gpu: 100,
-        factory: 1000,
-    };
-    const values = {
-        clicker: 0.5,
-        gpu: 1,
-        factory: 3,
+
+    let items = {
+        clicker: {
+            name: "clicker",
+            cost: 10,
+            count: 0,
+            value: 0.2,
+        },
+        gpu: {
+            name: "gpu",
+            cost: 100,
+            count: 0,
+            value: 1,
+        },
+        factory: {
+            name: "factory",
+            cost: 1000,
+            count: 0,
+            value: 5,
+        },
     };
 
     onMount(() => {
         // CPS
         setInterval(() => {
-            cps = count - diff;
+            cps = (count - diff).toFixed(2);
             diff = count;
         }, 1000);
 
+        // set count
         setInterval(() => {
-            count =
-                count +
-                clicker * values.clicker +
-                gpu * values.gpu +
-                factory * values.factory;
+            count = getCps();
             // console.log(cost);
         }, 1000);
     });
 
-    const clickedItem = (item) => {
-        console.log(item);
-        switch (item) {
-            case "clicker":
-                clicker++;
-                count = count - cost.clicker;
-                cost.clicker = Math.round(
-                    cost.clicker + Math.pow(1.15, clicker)
-                );
-                break;
-
-            case "gpu":
-                gpu++;
-                count = count - cost.gpu;
-                cost.gpu = Math.round(cost.gpu + Math.pow(1.2, gpu));
-                break;
-
-            case "factory":
-                factory++;
-                count = count - cost.factory;
-                cost.factory = Math.round(
-                    cost.factory + Math.pow(1.25, factory)
-                );
-
-                break;
+    const getCps = () => {
+        let allCount = count;
+        for (const [key, value] of Object.entries(items)) {
+            allCount = allCount + value.count * value.value;
         }
+        return allCount;
     };
+
+    const clickedItem = (item) => {
+        items[item].count++;
+        count = count - items[item].cost;
+        items[item].cost = Math.round(
+            items[item].cost + Math.pow(1.25, items[item].count)
+        );
+        cps = getCps();
+        diff = count;
+    };
+    // console.log(Object.keys(items));
 </script>
 
 <svelte:head>
@@ -80,49 +76,36 @@
 <main>
     <Row>
         <Col>
+            <h2>Total: {count.toFixed(2)}</h2>
+        </Col>
+        <Col>
             <h2>
                 Coins per Second: {cps}
             </h2>
         </Col>
     </Row>
     <Row>
-        <Col>
-            <Button color="primary" on:click={() => count++}>{count}</Button>
+        <Col md={6}>
+            <Button color="primary" on:click={() => count++}>Get coin</Button>
         </Col>
-        <Col>
-            <Row>
-                <Col>Clicker (+{values.clicker} cps) ({clicker} total)</Col>
-                <Col>
-                    <Button
-                        disabled={cost.clicker > count ? "disabled" : undefined}
-                        on:click={() => clickedItem("clicker")}
-                        outline
-                        color="primary">{cost.clicker}</Button
+        <Col md={6}>
+            {#each Object.entries(items) as item}
+                <Row>
+                    <Col sm={8}
+                        >{item[1].name} = +{item[1].value} cps ({item[1].count} total
+                        = {(item[1].count * item[1].value).toFixed(2)} cps)</Col
                     >
-                </Col>
-            </Row>
-            <Row>
-                <Col>GPU (+{values.gpu} cps) ({gpu} total)</Col>
-                <Col>
-                    <Button
-                        disabled={cost.gpu > count ? "disabled" : undefined}
-                        on:click={() => clickedItem("gpu")}
-                        outline
-                        color="secondary">{cost.gpu}</Button
-                    >
-                </Col>
-            </Row>
-            <Row>
-                <Col>Factory (+{values.factory} cps) ({factory} total)</Col>
-                <Col>
-                    <Button
-                        disabled={cost.factory > count ? "disabled" : undefined}
-                        on:click={() => clickedItem("factory")}
-                        outline
-                        color="warning">{cost.factory}</Button
-                    >
-                </Col>
-            </Row>
+                    <Col sm={4}>
+                        <Button
+                            disabled={item[1].cost > count
+                                ? "disabled"
+                                : undefined}
+                            on:click={() => clickedItem(item[1].name)}
+                            color="primary">{item[1].cost}</Button
+                        >
+                    </Col>
+                </Row>
+            {/each}
         </Col>
     </Row>
 </main>
