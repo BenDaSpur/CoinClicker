@@ -1,4 +1,4 @@
-# Cookie Clicker
+# Coin Clicker
 
 Built using [svelte](https://svelte.dev)
 
