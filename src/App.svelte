@@ -76,11 +76,10 @@
     const clickedItem = (item) => {
         items[item].count++;
         count = count - items[item].cost;
+        diff = diff - items[item].cost;
         items[item].cost = Math.round(
             items[item].cost + Math.pow(items[item].rate, items[item].count)
         );
-        cps = getCps();
-        diff = count;
     };
     // console.log(Object.keys(items));
 </script>
