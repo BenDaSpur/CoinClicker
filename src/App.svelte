@@ -1,7 +1,20 @@
 <script>
     export let name;
     import { onMount } from "svelte";
-    import { Button, Col, Row, Toast } from "sveltestrap";
+    import {
+        Button,
+        Col,
+        Row,
+        Toast,
+        Modal,
+        ModalBody,
+        ModalFooter,
+        ModalHeader,
+        Navbar,
+        NavbarBrand,
+        NavItem,
+        NavLink,
+    } from "sveltestrap";
     let count = 20000;
     let diff = 0;
     let cps = 0;
@@ -33,62 +46,53 @@
             name: "blockchain",
             cost: 20000,
             count: 0,
-            value: 30,
+            value: 20,
             rate: 1.3,
         },
     };
 
     let unlockables = [
         {
-            name: "cps1",
+            name: "cps",
             itemBuff: "clicker",
-            value: 0.05,
+            value: 0.1,
             pretty: "clicker +5%",
             price: 1000,
             purchased: false,
+            rate: 1.3,
+            count: 0,
         },
         {
-            name: "gpu1",
+            name: "gpu",
             itemBuff: "gpu",
-            value: 1,
+            value: 0.3,
             pretty: "gpu cps +1",
             price: 5000,
             purchased: false,
+            rate: 1.4,
+            count: 0,
+        },
+        {
+            name: "factory",
+            itemBuff: "factory",
+            value: 0.4,
+            pretty: "factory cps +1",
+            price: 20000,
+            purchased: false,
+            rate: 1.55,
+            count: 0,
+        },
+        {
+            name: "blockchain",
+            itemBuff: "blockchain",
+            value: 0.5,
+            pretty: "blockchain cps +1",
+            price: 100000,
+            purchased: false,
+            rate: 1.7,
+            count: 0,
         },
     ];
-
-    onMount(() => {
-        let storageItems = JSON.parse(localStorage.getItem("items"));
-        if (
-            storageItems != null &&
-            localStorage.getItem("count") != null
-            // && localStorage.getItem("upgrades") != null
-        ) {
-            items = storageItems;
-            count = parseInt(localStorage.getItem("count"));
-            // unlockables = JSON.parse(localStorage.getItem("upgrades"));
-        }
-        // CPS
-        setInterval(() => {
-            cps = (count - diff).toFixed(2);
-            diff = count;
-        }, 1000);
-
-        // set count
-        setInterval(() => {
-            count = getCps();
-            // console.log(cost);
-        }, 1000);
-
-        // save
-        setInterval(() => {
-            localStorage.setItem("items", JSON.stringify(items));
-            localStorage.setItem("count", count);
-            localStorage.setItem("upgrades", JSON.stringify(unlockables));
-            toastMessage = "Autosave complete";
-            isOpen = true;
-        }, 30000);
-    });
 
     const getCps = () => {
         let allCount = count;
@@ -117,14 +121,62 @@
         for (let upgrade in unlockables) {
             if (unlockables[upgrade].name == unlockable) {
                 items[unlockables[upgrade].itemBuff].value =
-                    items[unlockables[upgrade].itemBuff].value +
-                    unlockables[upgrade].value;
-                unlockables[upgrade].purchased = true;
+                    items[unlockables[upgrade].itemBuff].value *
+                    (1 + unlockables[upgrade].value);
+                // unlockables[upgrade].purchased = true;
+                unlockables[upgrade].price =
+                    unlockables[upgrade].rate * unlockables[upgrade].price;
+                unlockables[upgrade].count = unlockables[upgrade].count + 1;
                 toastMessage = "Upgrade purchased";
                 isOpen = true;
             }
         }
     };
+
+    let modalOpen = false;
+    const modalToggle = () => (modalOpen = !modalOpen);
+    const modalDelete = () => {
+        localStorage.clear();
+        location.reload();
+    };
+
+    onMount(() => {
+        let storageItems = JSON.parse(localStorage.getItem("items"));
+        let upgradeItems = JSON.parse(localStorage.getItem("upgrades"));
+        if (
+            storageItems != null &&
+            localStorage.getItem("count") != null
+            // && localStorage.getItem("upgrades") != null
+        ) {
+            items = storageItems;
+            count = parseInt(localStorage.getItem("count"));
+            // unlockables = JSON.parse(localStorage.getItem("upgrades"));
+        }
+
+        if (upgradeItems != null) {
+            unlockables = upgradeItems;
+        }
+        // CPS
+        setInterval(() => {
+            cps = (count - diff).toFixed(2);
+            diff = count;
+        }, 1000);
+
+        // set count
+        setInterval(() => {
+            count = getCps();
+            // console.log(cost);
+        }, 1000);
+
+        // save
+        setInterval(() => {
+            localStorage.setItem("items", JSON.stringify(items));
+            localStorage.setItem("count", count);
+            localStorage.setItem("upgrades", JSON.stringify(unlockables));
+            toastMessage = "Autosave complete";
+            isOpen = true;
+        }, 30000);
+    });
 </script>
 
 <svelte:head>
@@ -143,6 +195,14 @@
     <Toast autohide body {isOpen} on:close={() => (isOpen = false)}>
         {toastMessage}
     </Toast>
+    <Modal isOpen={modalOpen} {modalToggle}>
+        <ModalHeader {modalToggle}>Deleting game data</ModalHeader>
+        <ModalBody>Are you sure you want to wipe?</ModalBody>
+        <ModalFooter>
+            <Button color="secondary" on:click={modalToggle}>Cancel</Button>
+            <Button color="danger" on:click={modalDelete}>Yes</Button>
+        </ModalFooter>
+    </Modal>
     <Row>
         <Col md={6}>
             <h2>Total: {formatNumber(count)}</h2>
@@ -176,9 +236,8 @@
                                 : undefined}
                             on:click={() => clickUnlockable(purchase.name)}
                             color="success"
-                            >{purchase.pretty} - {formatNumber(
-                                purchase.price
-                            )}</Button
+                            >{purchase.pretty} - {formatNumber(purchase.price)} -
+                            ({purchase.count})</Button
                         >
                     </Col>
                 </Row>
@@ -209,9 +268,21 @@
                         >
                     </Col>
                 </Row>
+                <hr />
             {/each}
         </Col>
     </Row>
+    <Navbar class="fixed-bottom" color="dark" dark expand="md">
+        <NavbarBrand href="#">Coin Clicker</NavbarBrand>
+        <NavItem>
+            <NavLink href="https://github.com/BenDaSpur/CoinClicker"
+                >Github</NavLink
+            >
+        </NavItem>
+        <NavItem>
+            <Button href="#" on:click={modalToggle}>Wipe</Button>
+        </NavItem>
+    </Navbar>
 </main>
 
 <style>
