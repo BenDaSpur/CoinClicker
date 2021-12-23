@@ -205,7 +205,7 @@
     </Modal>
     <Row>
         <Col md={6}>
-            <h2>Total: {formatNumber(count)}</h2>
+            <h2>Total: {formatNumber(count)}c</h2>
         </Col>
         <Col md={6}>
             <h2>
@@ -236,8 +236,8 @@
                                 : undefined}
                             on:click={() => clickUnlockable(purchase.name)}
                             color="success"
-                            >{purchase.pretty} - {formatNumber(purchase.price)} -
-                            ({purchase.count})</Button
+                            >{purchase.pretty} - {formatNumber(purchase.price)}c
+                            - ({purchase.count})</Button
                         >
                     </Col>
                 </Row>
@@ -264,7 +264,8 @@
                                 ? "disabled"
                                 : undefined}
                             on:click={() => clickedItem(item[1].name)}
-                            color="primary">{formatNumber(item[1].cost)}</Button
+                            color="primary"
+                            >{formatNumber(item[1].cost)}c</Button
                         >
                     </Col>
                 </Row>
